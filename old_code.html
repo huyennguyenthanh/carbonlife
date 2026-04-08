@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>🌍 CarbonLifeSim — Đồng Hới</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#050d05;color:#dcfce7;font-family:'DM Sans',sans-serif;min-height:100%}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#22c55e;border-radius:2px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes glow{0%,100%{box-shadow:0 0 10px #22c55e30}50%{box-shadow:0 0 26px #22c55e60}}
+@keyframes rise{0%{transform:translateY(110vh);opacity:0}10%{opacity:.7}90%{opacity:.5}100%{transform:translateY(-80px);opacity:0}}
+@keyframes fireWarn{0%,100%{opacity:1;box-shadow:0 0 8px #ef4444}50%{opacity:.5;box-shadow:0 0 20px #ef4444}}
+@keyframes fadein{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.glow{animation:glow 3.5s infinite}
+.firewarn{animation:fireWarn 1.1s infinite}
+.ani{animation:fadein .5s ease-out both}
+ 
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:999;height:56px;display:flex;align-items:center;
+  padding:0 18px;gap:3px;background:#050d05f0;backdrop-filter:blur(12px);border-bottom:1px solid #1a3a1a}
+.logo{display:flex;align-items:center;gap:8px;cursor:pointer;margin-right:18px;flex-shrink:0;border:none;background:none}
+.lball{width:28px;height:28px;background:linear-gradient(135deg,#22c55e,#14d9a4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px}
+.ltext{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#4ade80}
+.ltext span{color:#14d9a4}
+.nb{background:none;border:none;cursor:pointer;padding:8px 12px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#86efac;transition:all .15s}
+.nb:hover{background:#0d1f0d;color:#4ade80}
+.nb.on{background:#0f2510;color:#4ade80;border-bottom:2px solid #22c55e}
+#co2b{display:none;align-items:center;gap:6px;background:#091509;border:1px solid #1a3a1a;border-radius:20px;padding:4px 12px;margin-left:auto;flex-shrink:0}
+ 
+/* PAGES */
+.pg{display:none;padding-top:56px;min-height:100vh}
+.pg.on{display:block}
+.wrap{max-width:1120px;margin:0 auto;padding:40px 20px}
+ 
+/* CARDS */
+.card{background:#091509;border:1px solid #1a3a1a;border-radius:14px;padding:20px}
+ 
+/* BUTTONS */
+.bp{background:#22c55e;color:#050d05;border:none;border-radius:9px;padding:12px 24px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+.bp:hover{background:#4ade80;transform:translateY(-2px)}
+.bg{background:transparent;color:#22c55e;border:1px solid #22c55e;border-radius:9px;padding:10px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.bg:hover{background:#0d1f0d}
+.bsm{background:#0d1f0d;color:#86efac;border:1px solid #1a3a1a;border-radius:7px;padding:6px 12px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s}
+.bsm:hover{border-color:#22c55e;color:#4ade80}
+ 
+/* RANGE SLIDER */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;background:#1a3a1a;border-radius:2px;outline:none;cursor:pointer;display:block}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:#22c55e;border-radius:50%;cursor:pointer;box-shadow:0 0 6px #22c55e80}
+ 
+/* PROGRESS */
+.pb{background:#0d1f0d;border-radius:4px;height:7px;overflow:hidden}
+.pf{height:100%;border-radius:4px;transition:width .4s ease;background:linear-gradient(90deg,#22c55e,#14d9a4)}
+.pf.red{background:linear-gradient(90deg,#ef4444,#f87171)}
+ 
+/* GRID HELPERS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+.calc-grid{display:grid;grid-template-columns:1fr 350px;gap:20px}
+.sim-grid{display:grid;grid-template-columns:1fr 285px;gap:20px}
+ 
+/* DIET BUTTONS */
+.db{flex:1;background:#091509;border:1px solid #1a3a1a;border-radius:9px;padding:12px 8px;cursor:pointer;color:#86efac;font-family:'DM Sans',sans-serif;text-align:center;transition:all .2s}
+.db.on{background:#0d1f0d;border-color:#22c55e;color:#4ade80}
+ 
+/* MINDSET OPTION */
+.ob{display:block;width:100%;background:#091509;border:1px solid #1a3a1a;border-radius:10px;padding:14px 18px;cursor:pointer;font-size:14px;color:#dcfce7;font-family:'DM Sans',sans-serif;transition:all .2s;text-align:left;margin-bottom:10px}
+.ob:hover{border-color:#22c55e;background:#0d1f0d}
+ 
+/* MISC */
+.row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#0d1f0d;border-radius:8px;margin-bottom:8px}
+.rec{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#0d1f0d;border-radius:8px;border:1px solid #1a3a1a;margin-bottom:9px}
+.sbox{background:#0d1f0d;border:1px solid #1a3a1a;border-radius:7px;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px}
+
+.kchip{background:#0d1f0d;border:1px solid #1a3a1a;border-radius:9px;padding:8px 12px;text-align:center;flex:1}
+.stepbar{display:flex;background:#091509;border:1px solid #1a3a1a;border-radius:12px;overflow:hidden;margin-bottom:22px}
+.step{flex:1;padding:13px 8px;text-align:center;border-right:1px solid #1a3a1a;transition:background .3s}
+.step:last-child{border-right:none}
+.step.done{background:#0d2010}
+.cwrap{position:relative;border-radius:14px;overflow:hidden;border:1px solid #1a3a1a;margin-bottom:14px}
+.cbadge{position:absolute;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600}
+canvas{display:block;width:100%;height:auto}
+ 
+/* HERO */
+#hero.pg{display:none;position:relative;overflow:hidden;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:60px 20px}
+#hero.pg.on{display:flex}
+.hgrid{position:absolute;inset:0;background-image:linear-gradient(#1a3a1a 1px,transparent 1px),linear-gradient(90deg,#1a3a1a 1px,transparent 1px);background-size:44px 44px;opacity:.08;pointer-events:none}
+.hglow{position:absolute;top:10%;left:50%;transform:translateX(-50%);width:500px;height:500px;background:radial-gradient(circle,#22c55e12 0%,transparent 70%);pointer-events:none}
+.pill{display:inline-flex;align-items:center;gap:7px;background:#091509;border:1px solid #1a3a1a;border-radius:20px;padding:6px 16px;margin-bottom:24px;font-size:11px;color:#86efac}
+.dot{width:6px;height:6px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block;flex-shrink:0}
+.grad{background:linear-gradient(135deg,#22c55e,#14d9a4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+ 
+@media(max-width:800px){.calc-grid,.sim-grid{grid-template-columns:1fr}.g2{grid-template-columns:1fr}.g4{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+ 
+<!-- NAV -->
+<nav>
+  <button class="logo" onclick="go('hero')"><div class="lball">🌍</div><span class="ltext">Carbon<span>LifeSim</span></span></button>
+  <button class="nb" id="nb-calc"  onclick="go('calc')">📊 Tính Toán</button>
+  <button class="nb" id="nb-wal"   onclick="go('wal')">💚 Ví Carbon</button>
+  <button class="nb" id="nb-sim"   onclick="go('sim')">🌆 Mô Phỏng</button>
+  <button class="nb" id="nb-mind"  onclick="go('mind')">🧠 Tư Duy</button>
+  <div id="co2b"><span style="font-size:11px;color:#86efac">CO₂/tháng</span><span id="co2v" style="font-size:13px;font-weight:700;color:#4ade80">0 kg</span></div>
+</nav>
+ 
+<!-- ══════════ HERO ══════════ -->
+<div id="hero" class="pg on">
+  <div class="hgrid"></div><div class="hglow"></div>
+  <div id="ptcls"></div>
+  <div style="position:relative;width:100%;max-width:840px">
+<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;color:#86efac"><span>🚌 Xe buýt / PTCC</span><span id="t-bus">3 km/ngày → <b style="color:#4ade80">4 kg CO₂</b></span></div>
+          <input type="range" id="sl-bus" min="0" max="100" value="3"/>
+        </div>
+      </div>
+ 
+      <!-- DIET -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">🍽️</span><div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Thói Quen Ăn Uống</div><div style="font-size:11px;color:#86efac">Chăn nuôi = nguồn phát thải lớn</div></div></div>
+          <span id="d-total" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#fb923c">60 kg CO₂</span>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="db" id="db-heavy" onclick="setDiet('heavy')"><div style="font-size:20px;margin-bottom:4px">🥩</div><div style="font-size:13px;font-weight:600">Nhiều thịt</div><div style="font-size:11px;opacity:.7">25 kg/tuần</div></button>
+          <button class="db on" id="db-moderate" onclick="setDiet('moderate')"><div style="font-size:20px;margin-bottom:4px">🍗</div><div style="font-size:13px;font-weight:600">Cân bằng</div><div style="font-size:11px;opacity:.7">15 kg/tuần</div></button>
+          <button class="db" id="db-veg" onclick="setDiet('vegetarian')"><div style="font-size:20px;margin-bottom:4px">🥗</div><div style="font-size:13px;font-weight:600">Ăn chay</div><div style="font-size:11px;opacity:.7">5 kg/tuần</div></button>
+        </div>
+      </div>
+ 
+      <!-- CONSUMPTION -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">🛍️</span><div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Hành Vi Tiêu Dùng</div><div style="font-size:11px;color:#86efac">Mua sắm & nhựa dùng một lần</div></div></div>
+          <span id="c-total" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#14d9a4">16 kg CO₂</span>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;color:#86efac"><span>👕 Quần áo mới (8 kg/sp)</span><span id="c-clo">2 sp/tháng → <b style="color:#4ade80">16 kg CO₂</b></span></div>
+          <input type="range" id="sl-clo" min="0" max="20" value="2"/>
+        </div>
+        <div>
+
+<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;color:#86efac"><span>🥤 Nhựa dùng một lần (2 kg/lần)</span><span id="c-pla">3 lần/ngày → <b style="color:#4ade80">180 kg CO₂</b></span></div>
+          <input type="range" id="sl-pla" min="0" max="20" value="3"/>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- RIGHT PANEL -->
+    <div style="display:flex;flex-direction:column;gap:14px;position:sticky;top:68px;align-self:start">
+      <!-- Score -->
+      <div class="card glow" id="sc-card">
+        <div style="text-align:center">
+          <div style="font-size:11px;color:#86efac;margin-bottom:5px">Điểm Carbon Tháng Này</div>
+          <div id="sc-num" style="font-family:'Syne',sans-serif;font-size:58px;font-weight:800;line-height:1;color:#22c55e">414</div>
+          <div style="font-size:12px;color:#86efac;margin-bottom:14px">kg CO₂ / tháng</div>
+          <div class="pb" style="margin-bottom:6px"><div id="sc-bar" class="pf" style="width:100%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#4b7a4b;margin-bottom:12px"><span>0</span><span style="color:#86efac">Mục tiêu: 100 kg/tháng</span></div>
+          <div id="sc-status" style="padding:10px;border-radius:8px;font-size:13px;font-weight:600;background:#7f1d1d30;border:1px solid #7f1d1d;color:#f87171">⚠️ Đang tính...</div>
+        </div>
+      </div>
+      <!-- Pie -->
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:10px">Phân Bổ Phát Thải</div>
+        <div style="position:relative;height:150px"><canvas id="pieC"></canvas></div>
+        <div id="pie-leg" style="margin-top:8px"></div>
+      </div>
+      <!-- Annual -->
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:10px">Dự Báo Hàng Năm</div>
+        <div id="ann"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+ 
+<!-- ══════════ WALLET ══════════ -->
+<div id="wal" class="pg">
+<div class="wrap">
+  <div style="margin-bottom:22px"><h2 style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin-bottom:6px">💚 Ví Carbon Cá Nhân</h2><p style="color:#86efac;font-size:14px">Theo dõi, tiết kiệm và tích lũy tài sản môi trường</p></div>
+  <div class="stepbar">
+    <div class="step" id="stp1"><div style="font-size:18px">📄</div><div style="font-size:11px;color:#22c55e;font-weight:700">01</div><div style="font-size:11px;color:#86efac">Hóa Đơn</div></div>
+
+<div class="step" id="stp2"><div style="font-size:18px">📱</div><div style="font-size:11px;color:#22c55e;font-weight:700">02</div><div style="font-size:11px;color:#86efac">Thiết Bị</div></div>
+    <div class="step" id="stp3"><div style="font-size:18px">🤖</div><div style="font-size:11px;color:#22c55e;font-weight:700">03</div><div style="font-size:11px;color:#86efac">Tính AI</div></div>
+    <div class="step" id="stp4"><div style="font-size:18px">💰</div><div style="font-size:11px;color:#22c55e;font-weight:700">04</div><div style="font-size:11px;color:#86efac">Tài Sản</div></div>
+  </div>
+  <div class="g2" style="margin-bottom:18px">
+    <!-- Upload -->
+    <div class="card">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:14px">📄 Bước 1: Tải Hóa Đơn Điện</div>
+      <!-- Hidden real file input -->
+      <input type="file" id="bill-file-input" accept="image/*,.pdf"
+        style="display:none" onchange="handleBillFile(this)"/>
+ 
+      <div id="upzone"
+        onclick="document.getElementById('bill-file-input').click()"
+        ondragover="event.preventDefault();this.style.borderColor='#22c55e';this.style.background='#0d1f0d'"
+        ondragleave="this.style.borderColor='#1a3a1a';this.style.background='transparent'"
+        ondrop="event.preventDefault();this.style.borderColor='#1a3a1a';this.style.background='transparent';handleBillDrop(event)"
+        style="border:2px dashed #1a3a1a;border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s"
+        onmouseover="this.style.borderColor='#22c55e';this.style.background='#0d1f0d'"
+        onmouseout="this.style.borderColor='#1a3a1a';this.style.background='transparent'">
+        <div style="font-size:40px;margin-bottom:10px">📤</div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:5px">Tải Ảnh Hóa Đơn Điện</div>
+        <div style="font-size:12px;color:#86efac;margin-bottom:6px">Nhấn để chọn ảnh · hoặc kéo thả vào đây</div>
+        <div style="font-size:11px;color:#4b7a4b">Hỗ trợ JPG, PNG, PDF · AI trích xuất kWh qua OCR</div>
+      </div>
+      <!-- OCR processing indicator (hidden by default) -->
+      <div id="bill-loading" style="display:none;text-align:center;padding:24px 0">
+        <div id="ocr-spinner" style="width:32px;height:32px;border:3px solid #1a3a1a;border-top-color:#22c55e;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px"></div>
+        <div style="font-size:13px;color:#86efac">Đang phân tích hóa đơn...</div>
+        <div style="font-size:11px;color:#4b7a4b;margin-top:4px">AI OCR đang trích xuất số kWh</div>
+      </div>
+      <div id="bill-res" style="display:none"></div>
+    </div>
+
+</div>
+  </div>
+  <div class="sim-grid">
+    <div>
+      <div class="cwrap">
+        <canvas id="cityC" width="820" height="340"></canvas>
+        <div id="sc-badge" class="cbadge" style="top:12px;right:12px;background:#7f1d1dcc;border:1px solid #ef4444;color:#f87171">⚠️ Như Hiện Tại</div>
+        <div id="fire-badge" class="cbadge firewarn" style="bottom:12px;right:12px;display:none;background:#7f1d1dcc;border:1px solid #ef4444;color:#f87171"></div>
+      </div>
+      <div class="g3">
+        <div class="card" id="kpi-t" style="text-align:center"><div style="font-size:11px;color:#86efac;margin-bottom:3px">🌡️ Nhiệt Độ TB</div><div id="v-t" style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#4ade80">27.0°C</div><div style="font-size:10px;color:#4b7a4b">Cơ sở: 27°C</div></div>
+        <div class="card" id="kpi-a" style="text-align:center"><div style="font-size:11px;color:#86efac;margin-bottom:3px">💨 Chỉ Số AQI</div><div id="v-a" style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#4ade80">48</div><div style="font-size:10px;color:#4b7a4b">Lành mạnh: &lt;50</div></div>
+        <div class="card" id="kpi-g" style="text-align:center"><div style="font-size:11px;color:#86efac;margin-bottom:3px">🌳 Độ Phủ Xanh</div><div id="v-g" style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#4ade80">34%</div><div style="font-size:10px;color:#4b7a4b">Mục tiêu: ≥30%</div></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card"><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;margin-bottom:8px">🌡️ Nhiệt Độ</div><div style="position:relative;height:105px"><canvas id="tC"></canvas></div></div>
+      <div class="card"><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;margin-bottom:8px">🌳 Độ Phủ Xanh</div><div style="position:relative;height:105px"><canvas id="gC"></canvas></div></div>
+      <div class="card"><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;margin-bottom:8px">💨 AQI</div><div style="position:relative;height:105px"><canvas id="aC"></canvas></div></div>
+      <div class="card" id="out-card"><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;margin-bottom:6px">📋 Dự Báo 10 Năm</div><div id="out-txt" style="font-size:12px;color:#86efac;line-height:1.65"></div></div>
+    </div>
+  </div>
+</div>
+</div>
+ 
+<!-- ══════════ MINDSET ══════════ -->
+<div id="mind" class="pg"><div class="wrap" id="mind-wrap"></div></div>
+ 
+<style>
+.devbtn{background:#0d2010;border:1px solid #1a3a1a;border-radius:6px;width:24px;height:24px;cursor:pointer;color:#86efac;font-size:15px;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;flex-shrink:0}
+.devbtn:hover{border-color:#22c55e;color:#4ade80}
+.dkg{font-size:11px;color:#86efac;width:46px;text-align:right;flex-shrink:0}
+</style>
+ 
+<script>
+// ════════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════════
+const S = {
+  elec:120, moto:15, car:0, bus:3,
+  diet:'moderate', clo:2, pla:3,
+  billUp:false,
+  devs:{ac:1,fr:1,led:5,wa:1,tv:1},
+  devPow:{ac:45,fr:15,led:2,wa:8,tv:5},
+  simYear:0, scen:'current',
+  msStep:-1, msAns:[]
+};
+const EF={elec:.9125,moto:.10,car:.21,bus:.05,heavy:25,moderate:15,veg:5,clo:8,pla:2};
+const BASE=73, TARGET=1200;
+ 
+function score(){
+  const e=S.elec*EF.elec;
+  const t=S.moto*30*EF.moto+S.car*30*EF.car+S.bus*30*EF.bus;
+  const d=S.diet==='heavy'?EF.heavy*4:S.diet==='moderate'?EF.moderate*4:EF.veg*4;
+  const c=S.clo*EF.clo+S.pla*30*EF.pla;
+  return{e,t,d,c,tot:e+t+d+c};
+}
+ 
+// ════════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════════════════════
+const PAGES=['hero','calc','wal','sim','mind'];
+function go(id){
+  PAGES.forEach(p=>{
+    document.getElementById(p).classList.toggle('on',p===id);
+    const nb=document.getElementById('nb-'+p);
+    if(nb) nb.classList.toggle('on',p===id);
+  });
+  document.getElementById('co2b').style.display = id==='hero'?'none':'flex';
+  if(id!=='sim'&&simRaf){cancelAnimationFrame(simRaf);simRaf=null;pts=[];}
+  if(id==='calc') initCalc();
+  if(id==='wal')  initWal();
+  if(id==='sim')  initSim();
+  if(id==='mind') initMind();
+  window.scrollTo(0,0);
+}
+ 
+// ════════════════════════════════════════════════════════════════
+//  PARTICLES (hero)
+// ════════════════════════════════════════════════════════════════
+(function(){
+  const el=document.getElementById('ptcls'),c=['#22c55e','#14d9a4','#fbbf24'];
+  for(let i=0;i<20;i++){
+    const d=document.createElement('div'),sz=4+(i*3)%10;
+    d.style.cssText=`position:absolute;border-radius:50%;pointer-events:none;left:${(i*4.8+2)%95}%;width:${sz}px;height:${sz}px;background:${c[i%3]};opacity:.5;animation:rise ${7+(i*1.1)%7}s ${(i*.5)%5}s infinite linear`;
+    el.appendChild(d);
+  }
+})();
+// ════════════════════════════════════════════════════════════════
+//  CALCULATOR
+// ════════════════════════════════════════════════════════════════
+let pieInst=null;
+ 
+function initCalc(){
+  // Attach slider listeners once
+  if(!document.getElementById('sl-e')._ready){
+    ['sl-e','sl-moto','sl-car','sl-bus','sl-clo','sl-pla'].forEach(id=>{
+      document.getElementById(id).addEventListener('input', calcChanged);
+      document.getElementById(id)._ready=true;
+    });
+  }
+  // Pie chart once
+  if(!pieInst){
+    pieInst=new Chart(document.getElementById('pieC').getContext('2d'),{
+      type:'doughnut',
+      data:{labels:['Điện','Giao thông','Thực phẩm','Tiêu dùng'],
+            datasets:[{data:[1,1,1,1],backgroundColor:['#fbbf24','#22c55e','#fb923c','#14d9a4'],borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${Math.round(c.parsed)} kg CO₂`},
+          backgroundColor:'#091509',borderColor:'#1a3a1a',borderWidth:1,bodyColor:'#dcfce7'}}}
+    });
+  }
+  calcChanged();
+}
+ 
+function calcChanged(){
+  // Read sliders
+  S.elec = +document.getElementById('sl-e').value;
+  S.moto = +document.getElementById('sl-moto').value;
+  S.car  = +document.getElementById('sl-car').value;
+  S.bus  = +document.getElementById('sl-bus').value;
+  S.clo  = +document.getElementById('sl-clo').value;
+  S.pla  = +document.getElementById('sl-pla').value;
+  renderCalc();
+}
+ 
+function renderCalc(){
+  const sc=score(), over=sc.tot>TARGET/12;
+ 
+  // Electricity
+  document.getElementById('e-kwh').textContent = S.elec+' kWh';
+  document.getElementById('e-co2').textContent = Math.round(sc.e)+' kg CO₂/tháng';  
+  document.getElementById('e-formula').innerHTML = `${S.elec} × 0.9125 = <b style="color:#fbbf24">${Math.round(sc.e)} kg CO₂</b>`;
+ 
+  // Transport labels
+  document.getElementById('t-moto').innerHTML = `${S.moto} km/ngày → <b style="color:#4ade80">${Math.round(S.moto*30*EF.moto)} kg CO₂</b>`;
+  document.getElementById('t-car').innerHTML  = `${S.car} km/ngày → <b style="color:#4ade80">${Math.round(S.car*30*EF.car)} kg CO₂</b>`;
+  document.getElementById('t-bus').innerHTML  = `${S.bus} km/ngày → <b style="color:#4ade80">${Math.round(S.bus*30*EF.bus)} kg CO₂</b>`;
+  document.getElementById('t-total').textContent = Math.round(sc.t)+' kg CO₂';
+ 
+  // Diet/Consumption
+  document.getElementById('d-total').textContent = Math.round(sc.d)+' kg CO₂';
+  document.getElementById('c-clo').innerHTML = `${S.clo} sp/tháng → <b style="color:#4ade80">${Math.round(S.clo*EF.clo)} kg CO₂</b>`;
+  document.getElementById('c-pla').innerHTML = `${S.pla} lần/ngày → <b style="color:#4ade80">${Math.round(S.pla*30*EF.pla)} kg CO₂</b>`;
+  document.getElementById('c-total').textContent = Math.round(sc.c)+' kg CO₂';
+ 
+  // Score card
+  const sn=document.getElementById('sc-num');
+  sn.textContent = Math.round(sc.tot);
+  }
+function chDev(k,d){S.devs[k]=Math.max(0,S.devs[k]+d);renderWal();}
+ 
+// Handle file chosen via input
+function handleBillFile(input){
+  if(!input.files||!input.files[0]) return;
+  processBillFile(input.files[0]);
+}
+ 
+// Handle drag-and-drop
+function handleBillDrop(event){
+  const file = event.dataTransfer.files[0];
+  if(file) processBillFile(file);
+}
+ 
+// Core: read file → show preview → simulate OCR → show results
+function processBillFile(file){
+  // Validate type
+  const ok = file.type.startsWith('image/') || file.type==='application/pdf';
+  if(!ok){
+    alert('Vui lòng chọn file ảnh (JPG, PNG) hoặc PDF.');
+    return;
+  }
+ 
+  // Hide zone, show loading spinner
+  document.getElementById('upzone').style.display='none';
+  document.getElementById('bill-loading').style.display='block';
+  document.getElementById('bill-res').style.display='none';
+ 
+  // Read file as data URL for preview (images only)
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const dataUrl = file.type.startsWith('image/') ? e.target.result : null;
+ 
+    // Simulate OCR processing delay (1.2s)
+    setTimeout(()=>{
+      document.getElementById('bill-loading').style.display='none';
+      showBillResult(file.name, dataUrl);
+    }, 1200);
+  };
+  reader.onerror = function(){
+    document.getElementById('bill-loading').style.display='none';
+    document.getElementById('upzone').style.display='block';
+    alert('Không thể đọc file. Vui lòng thử lại.');
+  };
+  reader.readAsDataURL(file);
+}
+ 
+function showBillResult(fileName, previewUrl){
+  S.billUp = true;
+  const sc=score(), ae=Math.round(sc.e), saved=Math.round(BASE-ae);
+  // Simulate OCR: slightly randomize extracted kWh around current value ±8%
+  const ocrKwh = Math.round(S.elec * (0.94 + Math.random()*0.14));
+  const ocrCo2 = Math.round(ocrKwh * 0.9125);
+  const ocrSaved = Math.round(BASE - ocrCo2);
+ 
+  const r = document.getElementById('bill-res');
+  r.style.display = 'block';
+  r.innerHTML = `
+  <div style="background:#0d1f0d;border:1px solid rgba(34,197,94,.22);border-radius:10px;padding:14px">
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">
+      ${previewUrl
+        ? `<img src="${previewUrl}" alt="bill"
+             style="width:52px;height:62px;object-fit:cover;border-radius:7px;border:1px solid #1a3a1a;flex-shrink:0"/>`
+        : `<div style="width:52px;height:62px;background:#1a3a1a;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📄</div>`
+      }
+      <div style="flex:1;min-width:0">
+    <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${fileName}</div>
+        <div style="font-size:11px;color:#4ade80;margin-top:2px">✓ OCR hoàn tất — số liệu đã trích xuất</div>
+        <div style="font-size:10px;color:#4b7a4b;margin-top:2px">AI đọc số kWh từ hóa đơn thành công</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <div style="background:#091509;border-radius:7px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:#86efac;margin-bottom:2px">kWh trích xuất</div>
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fbbf24">${ocrKwh}</div>
+      </div>
+      <div style="background:#091509;border-radius:7px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:#86efac;margin-bottom:2px">CO₂ phát thải</div>
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#f87171">${ocrCo2} kg</div>
+      </div>
+      <div style="background:#091509;border-radius:7px;padding:8px;text-align:center">
+        <div style="font-size:10px;color:#86efac;margin-bottom:2px">So với chuẩn</div>
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:${ocrSaved>0?'#4ade80':'#f87171'}">${ocrSaved>0?'−':'+'}${Math.abs(ocrSaved)} kg</div>
+      </div>
+    </div>
+    <div style="background:#091509;border-radius:7px;padding:8px 10px;font-size:11px;color:#86efac;margin-bottom:10px">
+      <span style="color:#4ade80;font-weight:600">Gợi ý AI: </span>
+      ${ocrCo2>BASE
+        ? `Mức tiêu thụ <strong style="color:#f87171">${ocrKwh} kWh</strong> vượt ngưỡng lý tưởng. Hãy thử nâng nhiệt độ điều hòa lên 26°C và tắt thiết bị chờ.`
+        : `Xuất sắc! <strong style="color:#4ade80">${ocrKwh} kWh</strong> nằm trong ngưỡng bền vững. Tiếp tục duy trì thói quen tốt này!`
+      }
+    </div>
+    <div style="text-align:center">
+      <button class="bsm" onclick="resetBill()">↩ Tải hóa đơn khác</button>
+    </div>
+  </div>`;
+ 
+  renderWal();
+}
+ 
+function uploadBill(){
+  // Legacy fallback — trigger file picker
+  document.getElementById('bill-file-input').click();
+}
+ 
+function resetBill(){
+  S.billUp=false;
+  // Reset file input so same file can be re-selected
+  const fi=document.getElementById('bill-file-input');
+  fi.value='';
+  document.getElementById('upzone').style.display='block';
+  document.getElementById('bill-loading').style.display='none';
+  document.getElementById('bill-res').style.display='none';
+  document.getElementById('bill-res').innerHTML='';
+  renderWal();
+}
+
+
+// ════════════════════════════════════════════════════════════════
+//  SIMULATION — fire & smoke canvas
+// ════════════════════════════════════════════════════════════════
+let simRaf=null, pts=[], tCI=null, gCI=null, aCI=null;
+ 
+ 
+ 
+function mkPt(x,y,type){
+  const sm=type==='smoke';
+  return{x,y,vx:(Math.random()-.5)*(sm?.7:1.5),vy:-(Math.random()*(sm?1.6:3)+(sm?.5:1)),
+         life:1,decay:sm?Math.random()*.007+.004:Math.random()*.022+.016,
+         size:sm?Math.random()*20+10:Math.random()*11+4,type};
+}
+ 
+function getPol(){
+  const sc=score(), base=Math.min(1,sc.tot/280);
+  return (S.scen==='current'?base:base*.22)*(S.simYear/10);
+}
+ 
+ 
+// ═══ ĐỒNG HỚI CITYSCAPE — UNIQUE 2D PARALLAX ENGINE ════════════════════════
+// Layered side-view: sea → mountains → city skyline → foreground → particles
+// Features: Nhật Lệ river, Quảng Bình Gate arch, beach, animated birds/waves
+ 
+function lerp(a,b,t){return a+(b-a)*t;}
+function lerpC(r1,g1,b1,r2,g2,b2,t){
+  return`rgb(${Math.round(lerp(r1,r2,t))},${Math.round(lerp(g1,g2,t))},${Math.round(lerp(b1,b2,t))})`;
+}
+ 
+// ── WAVE helper ──────────────────────────────────────────────────────────────
+function drawWaves(ctx, yBase, W, t, amp, freq, col, alpha){
+  ctx.save(); ctx.globalAlpha=alpha; ctx.strokeStyle=col; ctx.lineWidth=1.5;
+  ctx.beginPath();
+  for(let x=0;x<=W;x+=2){
+    const y=yBase+Math.sin((x/W)*freq*Math.PI*2+t*.0015)*amp;
+    x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke(); ctx.restore();
+}
+ 
+// ── BIRD helper (tiny V silhouette) ──────────────────────────────────────────
+function drawBird(ctx,x,y,s,col){
+  ctx.save();ctx.strokeStyle=col;ctx.lineWidth=1.2;ctx.globalAlpha=.7;
+  ctx.beginPath();
+  ctx.moveTo(x-s,y);ctx.quadraticCurveTo(x-s*.5,y-s*.6,x,y);
+  ctx.quadraticCurveTo(x+s*.5,y-s*.6,x+s,y);
+  ctx.stroke();ctx.restore();
+}
+ 
+// ── Mountain range helper ─────────────────────────────────────────────────────
+function drawMountains(ctx,peaks,groundY,W,fillCol,strokeCol){
+  ctx.beginPath();ctx.moveTo(0,groundY);
+  peaks.forEach(([px,py])=>ctx.lineTo(px*W,py));
+  ctx.lineTo(W,groundY);ctx.closePath();
+  ctx.fillStyle=fillCol;ctx.fill();
+  if(strokeCol){ctx.strokeStyle=strokeCol;ctx.lineWidth=1;ctx.stroke();}
+}
+ 
+// ── Quảng Bình Gate arch ─────────────────────────────────────────────────────
+function drawQBGate(ctx, cx, baseY, pol){
+  const wallCol  = lerpC(180,160,130, 120,80,60, pol);
+  const shadowCol= lerpC(140,120,100,  80,45,30, pol);
+  const roofCol  = lerpC(160,60,50,  100,30,20, pol);
+  const W=72, H=90, arch=30, tier2H=30, tier2W=50;
+ 
+  // Base gate walls
+  ctx.fillStyle=wallCol;
+  ctx.fillRect(cx-W/2,baseY-H,W,H);
+ 
+  // Arch opening
+    <div style="max-width:760px;margin:0 auto;padding:40px 0">
+    <div class="card glow" style="text-align:center;margin-bottom:20px;border:1px solid ${prof.c}50">
+      <div style="font-size:56px;margin-bottom:10px">${prof.i}</div>
+      <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:${prof.c};margin-bottom:8px">${prof.n}</div>
+      <div style="font-size:14px;color:#86efac;max-width:480px;margin:0 auto 20px;line-height:1.7">${prof.d}</div>
+      <div style="display:flex;justify-content:center;gap:14px;margin-bottom:20px;flex-wrap:wrap">
+        <div style="background:#0d1f0d;border:1px solid #1a3a1a;border-radius:12px;padding:16px 26px">
+          <div style="font-size:11px;color:#86efac;margin-bottom:4px">Chỉ Số Nhận Thức Carbon</div>
+          <div style="font-family:'Syne',sans-serif;font-size:48px;font-weight:800;color:${prof.c}">${aw}</div>
+          <div style="font-size:11px;color:#4b7a4b">trên 100</div>
+        </div>
+        <div style="background:#0d1f0d;border:1px solid #1a3a1a;border-radius:12px;padding:16px 22px">
+          <div style="font-size:11px;color:#86efac;margin-bottom:6px">Huy Hiệu Hành Vi</div>
+          <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fbbf24;margin-bottom:4px">🏅 ${prof.b}</div>
+          <div style="font-size:11px;color:#4b7a4b;margin-bottom:6px">Điểm thô: ${tot}/18</div>
+          <div class="pb"><div class="pf" style="width:${aw}%;background:linear-gradient(90deg,${prof.c},#14d9a4)"></div></div>
+        </div>
+      </div>
+      <button class="bp" onclick="S.msStep=-1;S.msAns=[];renderMindHome()">Làm Lại</button>
+    </div>
+    <div class="card">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:12px">📊 Mô Hình Trả Lời Của Bạn</div>
+      <div style="position:relative;height:165px"><canvas id="barC"></canvas></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;justify-content:center">
+        ${cols.map((c,i)=>`<div style="display:flex;align-items:center;gap:4px"><div style="width:9px;height:9px;background:${c};border-radius:2px"></div><span style="font-size:11px;color:#86efac">${lbs[i]}</span></div>`).join('')}
+      </div>
+    </div>
+  </div>
+  new Chart(document.getElementById('barC').getContext('2d'),{type:'bar',
+    data:{labels:bD.map(d=>d.q),datasets:[{data:bD.map(d=>d.s),backgroundColor:bD.map(d=>cols[d.s]),borderRadius:5,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${lbs[c.parsed.y]}`},backgroundColor:'#091509',borderColor:'#1a3a1a',borderWidth:1,bodyColor:'#dcfce7'}},
+
+scales:{x:{grid:{color:'#1a3a1a'},ticks:{color:'#86efac'}},y:{grid:{color:'#1a3a1a'},ticks:{color:'#86efac'},min:0,max:3}}}});
+}
+
+ 
+// ════════════════════════════════════════════════════════════════
+//  BOOT
+// ════════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', function(){
+  // Calculator listeners
+  document.getElementById('sl-e').addEventListener('input', calcChanged);
+  document.getElementById('sl-moto').addEventListener('input', calcChanged);
+  document.getElementById('sl-car').addEventListener('input', calcChanged);
+  document.getElementById('sl-bus').addEventListener('input', calcChanged);
+  document.getElementById('sl-clo').addEventListener('input', calcChanged);
+  document.getElementById('sl-pla').addEventListener('input', calcChanged);
+  // Pie chart
+  pieInst=new Chart(document.getElementById('pieC').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:['Điện','Giao thông','Thực phẩm','Tiêu dùng'],
+          datasets:[{data:[109,45,60,16],backgroundColor:['#fbbf24','#22c55e','#fb923c','#14d9a4'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${Math.round(c.parsed)} kg CO₂`},
+        backgroundColor:'#091509',borderColor:'#1a3a1a',borderWidth:1,bodyColor:'#dcfce7'}}}
+  });
+  renderCalc();
+  renderWal();
+  // Mindset
+  renderMindHome();
+});
+</script>
+</body>
+</html>
