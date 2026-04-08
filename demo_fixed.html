@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>🌍 CarbonLifeSim — Đồng Hới</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#050d05;color:#dcfce7;font-family:'DM Sans',sans-serif;min-height:100%;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#22c55e;border-radius:2px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes glow{0%,100%{box-shadow:0 0 10px #22c55e30}50%{box-shadow:0 0 26px #22c55e60}}
+@keyframes rise{0%{transform:translateY(110vh);opacity:0}10%{opacity:.7}90%{opacity:.5}100%{transform:translateY(-80px);opacity:0}}
+.glow{animation:glow 3.5s infinite}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:999;height:56px;display:flex;align-items:center;padding:0 18px;gap:8px;background:#050d05f0;backdrop-filter:blur(12px);border-bottom:1px solid #1a3a1a}
+.logo{display:flex;align-items:center;gap:8px;cursor:pointer;margin-right:18px;flex-shrink:0;border:none;background:none;color:inherit}
+.lball{width:28px;height:28px;background:linear-gradient(135deg,#22c55e,#14d9a4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px}
+.ltext{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#4ade80}
+.ltext span{color:#14d9a4}
+.nb{background:none;border:none;cursor:pointer;padding:8px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#86efac;transition:all .15s}
+.nb:hover{background:#0d1f0d;color:#4ade80}
+.nb.on{background:#0f2510;color:#4ade80;border-bottom:2px solid #22c55e}
+#co2b{display:none;align-items:center;gap:6px;background:#091509;border:1px solid #1a3a1a;border-radius:20px;padding:4px 12px;margin-left:auto}
+
+/* PAGES */
+.pg{display:none;padding-top:56px;min-height:100vh}
+.pg.on{display:block}
+.wrap{max-width:1120px;margin:0 auto;padding:40px 20px}
+
+/* CARDS */
+.card{background:#091509;border:1px solid #1a3a1a;border-radius:14px;padding:20px}
+
+/* BUTTONS */
+.bp{background:#22c55e;color:#050d05;border:none;border-radius:9px;padding:12px 24px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+.bp:hover{background:#4ade80;transform:translateY(-2px)}
+
+/* RANGE SLIDER */
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:#1a3a1a;border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:#22c55e;border-radius:50%;cursor:pointer;box-shadow:0 0 6px #22c55e80}
+
+/* PROGRESS */
+.pb{background:#0d1f0d;border-radius:4px;height:7px;overflow:hidden}
+.pf{height:100%;border-radius:4px;transition:width .4s ease;background:linear-gradient(90deg,#22c55e,#14d9a4)}
+
+/* GRID */
+.calc-grid{display:grid;grid-template-columns:1fr 350px;gap:20px}
+
+/* DIET BUTTONS */
+.db{flex:1;background:#091509;border:1px solid #1a3a1a;border-radius:9px;padding:12px 8px;cursor:pointer;color:#86efac;font-family:'DM Sans',sans-serif;text-align:center;transition:all .2s}
+.db.on{background:#0d1f0d;border-color:#22c55e;color:#4ade80}
+
+/* HERO */
+#hero.pg{display:none;position:relative;overflow:hidden;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:60px 20px}
+#hero.pg.on{display:flex}
+.hgrid{position:absolute;inset:0;background-image:linear-gradient(#1a3a1a 1px,transparent 1px),linear-gradient(90deg,#1a3a1a 1px,transparent 1px);background-size:44px 44px;opacity:.08;pointer-events:none}
+.hglow{position:absolute;top:10%;left:50%;transform:translateX(-50%);width:500px;height:500px;background:radial-gradient(circle,#22c55e12 0%,transparent 70%);pointer-events:none}
+.pill{display:inline-flex;align-items:center;gap:7px;background:#091509;border:1px solid #1a3a1a;border-radius:20px;padding:6px 16px;margin-bottom:24px;font-size:11px;color:#86efac}
+.dot{width:6px;height:6px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block;flex-shrink:0}
+.grad{background:linear-gradient(135deg,#22c55e,#14d9a4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+@media(max-width:800px){.calc-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <button class="logo" onclick="go('hero')"><div class="lball">🌍</div><span class="ltext">Carbon<span>LifeSim</span></span></button>
+  <button class="nb" id="nb-calc" onclick="go('calc')">📊 Tính Toán</button>
+  <button class="nb" id="nb-wal" onclick="go('wal')">💚 Ví Carbon</button>
+  <button class="nb" id="nb-sim" onclick="go('sim')">🌆 Mô Phỏng</button>
+  <button class="nb" id="nb-mind" onclick="go('mind')">🧠 Tư Duy</button>
+  <div id="co2b"><span style="font-size:11px;color:#86efac">CO₂/tháng</span><span id="co2v" style="font-size:13px;font-weight:700;color:#4ade80">230 kg</span></div>
+</nav>
+
+<!-- ══════════ HERO ══════════ -->
+<div id="hero" class="pg on">
+  <div class="hgrid"></div>
+  <div class="hglow"></div>
+  <div id="ptcls" style="position:absolute;inset:0;overflow:hidden;pointer-events:none"></div>
+  <div style="position:relative;max-width:800px">
+    <div class="pill"><span class="dot"></span>Sống Carbon-thấp cho tương lai xanh</div>
+    <h1 style="font-family:'Syne',sans-serif;font-size:clamp(36px,8vw,72px);font-weight:800;line-height:1.1;margin-bottom:20px">
+      Tính Toán & Quản Lý<br/><span class="grad">Dấu Chân Carbon</span>
+    </h1>
+    <p style="font-size:18px;color:#86efac;max-width:600px;margin:0 auto 32px;line-height:1.7">
+      Mô phỏng tác động môi trường cá nhân tại Đồng Hới, Quảng Bình — từ điện năng, giao thông đến thói quen tiêu dùng
+    </p>
+    <button class="bp" onclick="go('calc')">🚀 Bắt Đầu Tính Toán</button>
+  </div>
+</div>
+
+<!-- ══════════ CALCULATOR ══════════ -->
+<div id="calc" class="pg">
+  <div class="wrap">
+    <div style="margin-bottom:30px">
+      <h2 style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin-bottom:8px">📊 Tính Toán Dấu Chân Carbon</h2>
+      <p style="color:#86efac;font-size:14px">Điều chỉnh các thông số để xem tác động của bạn</p>
+    </div>
+    
+    <div class="calc-grid">
+      <!-- LEFT INPUTS -->
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <!-- ELECTRICITY -->
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:22px">⚡</span>
+              <div>
+                <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Tiêu Thụ Điện</div>
+                <div style="font-size:11px;color:#86efac">Hệ số: 0.9125 kg CO₂/kWh</div>
+              </div>
+            </div>
+            <span id="e-total" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#fbbf24">110 kg CO₂</span>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;color:#86efac">
+              <span>Điện tiêu thụ hàng tháng</span>
+              <span id="e-kwh"><b style="color:#4ade80">120 kWh</b></span>
+            </div>
+            <input type="range" id="sl-e" min="50" max="500" value="120"/>
+          </div>
+        </div>
+
+        <!-- TRANSPORT -->
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:22px">🚗</span>
+              <div>
+                <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Giao Thông</div>
+                <div style="font-size:11px;color:#86efac">Di chuyển hàng ngày</div>
+              </div>
+            </div>
+            <span id="t-total" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#22c55e">45 kg CO₂</span>
+          </div>
+          <div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;color:#86efac">
+              <span>🏍️ Xe máy (0.10 kg/km)</span>
+              <span id="t-moto"><b style="color:#4ade80">15 km/ngày → 45 kg CO₂</b></span>
+            </div>
+            <input type="range" id="sl-moto" min="0" max="100" value="15"/>
+          </div>
+          <div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;color:#86efac">
+              <span>🚗 Ô tô (0.21 kg/km)</span>
+              <span id="t-car"><b style="color:#4ade80">0 km/ngày → 0 kg CO₂</b></span>
+            </div>
+            <input type="range" id="sl-car" min="0" max="100" value="0"/>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;color:#86efac">
+              <span>🚌 Xe buýt/PTCC (0.05 kg/km)</span>
+              <span id="t-bus"><b style="color:#4ade80">3 km/ngày → 4 kg CO₂</b></span>
+            </div>
+            <input type="range" id="sl-bus" min="0" max="100" value="3"/>
+          </div>
+        </div>
+
+        <!-- DIET -->
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:22px">🍽️</span>
+              <div>
+                <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Thói Quen Ăn Uống</div>
+                <div style="font-size:11px;color:#86efac">Chăn nuôi = nguồn phát thải lớn</div>
+              </div>
+            </div>
+            <span id="d-total" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#fb923c">60 kg CO₂</span>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="db" id="db-heavy" onclick="setDiet('heavy')">
+              <div style="font-size:20px;margin-bottom:4px">🥩</div>
+              <div style="font-size:13px;font-weight:600">Nhiều thịt</div>
+              <div style="font-size:11px;opacity:.7">100 kg/tháng</div>
+            </button>
+            <button class="db on" id="db-moderate" onclick="setDiet('moderate')">
+              <div style="font-size:20px;margin-bottom:4px">🍗</div>
+              <div style="font-size:13px;font-weight:600">Cân bằng</div>
+              <div style="font-size:11px;opacity:.7">60 kg/tháng</div>
+            </button>
+            <button class="db" id="db-veg" onclick="setDiet('vegetarian')">
+              <div style="font-size:20px;margin-bottom:4px">🥗</div>
+              <div style="font-size:13px;font-weight:600">Ăn chay</div>
+              <div style="font-size:11px;opacity:.7">20 kg/tháng</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- CONSUMPTION -->
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:22px">🛍️</span>
+              <div>
+                <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Tiêu Dùng</div>
+                <div style="font-size:11px;color:#86efac">Mua sắm & nhựa</div>
+              </div>
+            </div>
+            <span id="c-total" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#14d9a4">196 kg CO₂</span>
+          </div>
+          <div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;color:#86efac">
+              <span>👕 Quần áo mới (8 kg/sp)</span>
+              <span id="c-clo"><b style="color:#4ade80">2 sp/tháng → 16 kg CO₂</b></span>
+            </div>
+            <input type="range" id="sl-clo" min="0" max="20" value="2"/>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;color:#86efac">
+              <span>🥤 Nhựa dùng 1 lần (2 kg/lần)</span>
+              <span id="c-pla"><b style="color:#4ade80">3 lần/ngày → 180 kg CO₂</b></span>
+            </div>
+            <input type="range" id="sl-pla" min="0" max="20" value="3"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div style="display:flex;flex-direction:column;gap:14px;position:sticky;top:68px;align-self:start">
+        <!-- Score -->
+        <div class="card glow" id="sc-card">
+          <div style="text-align:center">
+            <div style="font-size:11px;color:#86efac;margin-bottom:5px">Dấu Chân Carbon/Tháng</div>
+            <div id="sc-num" style="font-family:'Syne',sans-serif;font-size:58px;font-weight:800;line-height:1;color:#22c55e">411</div>
+            <div style="font-size:12px;color:#86efac;margin-bottom:14px">kg CO₂</div>
+            <div class="pb" style="margin-bottom:6px"><div id="sc-bar" class="pf" style="width:100%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:#4b7a4b;margin-bottom:12px">
+              <span>0</span>
+              <span style="color:#86efac">Mục tiêu: 100 kg/tháng</span>
+            </div>
+            <div id="sc-status" style="padding:10px;border-radius:8px;font-size:13px;font-weight:600;background:#7f1d1d30;border:1px solid #7f1d1d;color:#f87171">⚠️ Vượt mục tiêu 311%</div>
+          </div>
+        </div>
+
+        <!-- Pie -->
+        <div class="card">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:10px">Phân Bổ Phát Thải</div>
+          <div style="position:relative;height:150px"><canvas id="pieC"></canvas></div>
+        </div>
+
+        <!-- Annual -->
+        <div class="card">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:10px">Dự Báo Hàng Năm</div>
+          <div id="ann" style="font-size:12px;color:#86efac;line-height:1.7"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ WALLET ══════════ -->
+<div id="wal" class="pg">
+  <div class="wrap">
+    <div style="margin-bottom:30px">
+      <h2 style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin-bottom:8px">💚 Ví Carbon Cá Nhân</h2>
+      <p style="color:#86efac;font-size:14px">Theo dõi và tích lũy tài sản môi trường</p>
+    </div>
+    <div class="card" style="text-align:center;padding:60px 20px">
+      <div style="font-size:64px;margin-bottom:16px">🚧</div>
+      <div style="font-size:18px;font-weight:600;margin-bottom:8px">Tính Năng Đang Phát Triển</div>
+      <div style="font-size:14px;color:#86efac">Upload hóa đơn điện và quản lý tài sản carbon sẽ sớm ra mắt!</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SIMULATION ══════════ -->
+<div id="sim" class="pg">
+  <div class="wrap">
+    <div style="margin-bottom:30px">
+      <h2 style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin-bottom:8px">🌆 Mô Phỏng Tác Động</h2>
+      <p style="color:#86efac;font-size:14px">Dự báo tác động môi trường Đồng Hới 10 năm tới</p>
+    </div>
+    <div class="card" style="text-align:center;padding:60px 20px">
+      <div style="font-size:64px;margin-bottom:16px">🎨</div>
+      <div style="font-size:18px;font-weight:600;margin-bottom:8px">Tính Năng Đang Phát Triển</div>
+      <div style="font-size:14px;color:#86efac">Mô phỏng 3D Đồng Hới và dự báo nhiệt độ/AQI sẽ sớm ra mắt!</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MINDSET ══════════ -->
+<div id="mind" class="pg">
+  <div class="wrap" id="mind-wrap"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════════
+const S = {
+  elec: 120,
+  moto: 15,
+  car: 0,
+  bus: 3,
+  diet: 'moderate',
+  clo: 2,
+  pla: 3,
+  msStep: -1,
+  msAns: []
+};
+
+const EF = {
+  elec: 0.9125,
+  moto: 0.10,
+  car: 0.21,
+  bus: 0.05,
+  heavy: 100,
+  moderate: 60,
+  veg: 20,
+  clo: 8,
+  pla: 2
+};
+
+function score() {
+  const e = S.elec * EF.elec;
+  const t = S.moto * 30 * EF.moto + S.car * 30 * EF.car + S.bus * 30 * EF.bus;
+  const d = EF[S.diet];
+  const c = S.clo * EF.clo + S.pla * 30 * EF.pla;
+  return { e, t, d, c, tot: e + t + d + c };
+}
+
+// ════════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════════════════════
+const PAGES = ['hero', 'calc', 'wal', 'sim', 'mind'];
+function go(id) {
+  console.log('Navigating to:', id);
+  PAGES.forEach(p => {
+    const pg = document.getElementById(p);
+    const nb = document.getElementById('nb-' + p);
+    if (pg) pg.classList.toggle('on', p === id);
+    if (nb) nb.classList.toggle('on', p === id);
+  });
+  document.getElementById('co2b').style.display = id === 'hero' ? 'none' : 'flex';
+  if (id === 'calc') updateCalc();
+  if (id === 'mind') renderMindHome();
+  window.scrollTo(0, 0);
+}
+
+// ════════════════════════════════════════════════════════════════
+//  PARTICLES
+// ════════════════════════════════════════════════════════════════
+(function() {
+  const el = document.getElementById('ptcls');
+  const colors = ['#22c55e', '#14d9a4', '#fbbf24'];
+  for (let i = 0; i < 20; i++) {
+    const d = document.createElement('div');
+    const sz = 4 + (i * 3) % 10;
+    d.style.cssText = `position:absolute;border-radius:50%;pointer-events:none;left:${(i*4.8+2)%95}%;width:${sz}px;height:${sz}px;background:${colors[i%3]};opacity:.5;animation:rise ${7+(i*1.1)%7}s ${(i*.5)%5}s infinite linear`;
+    el.appendChild(d);
+  }
+})();
+
+// ════════════════════════════════════════════════════════════════
+//  CALCULATOR
+// ════════════════════════════════════════════════════════════════
+let pieInst = null;
+
+function setDiet(type) {
+  S.diet = type;
+  ['heavy', 'moderate', 'veg'].forEach(d => {
+    document.getElementById('db-' + d).classList.toggle('on', d === type);
+  });
+  updateCalc();
+}
+
+function updateCalc() {
+  const sc = score();
+  const TARGET = 100;
+  
+  // Update electricity
+  document.getElementById('e-kwh').innerHTML = `<b style="color:#4ade80">${S.elec} kWh</b>`;
+  document.getElementById('e-total').textContent = Math.round(sc.e) + ' kg CO₂';
+  
+  // Update transport
+  document.getElementById('t-moto').innerHTML = `<b style="color:#4ade80">${S.moto} km/ngày → ${Math.round(S.moto*30*EF.moto)} kg CO₂</b>`;
+  document.getElementById('t-car').innerHTML = `<b style="color:#4ade80">${S.car} km/ngày → ${Math.round(S.car*30*EF.car)} kg CO₂</b>`;
+  document.getElementById('t-bus').innerHTML = `<b style="color:#4ade80">${S.bus} km/ngày → ${Math.round(S.bus*30*EF.bus)} kg CO₂</b>`;
+  document.getElementById('t-total').textContent = Math.round(sc.t) + ' kg CO₂';
+  
+  // Update diet
+  document.getElementById('d-total').textContent = Math.round(sc.d) + ' kg CO₂';
+  
+  // Update consumption
+  document.getElementById('c-clo').innerHTML = `<b style="color:#4ade80">${S.clo} sp/tháng → ${S.clo*EF.clo} kg CO₂</b>`;
+  document.getElementById('c-pla').innerHTML = `<b style="color:#4ade80">${S.pla} lần/ngày → ${S.pla*30*EF.pla} kg CO₂</b>`;
+  document.getElementById('c-total').textContent = Math.round(sc.c) + ' kg CO₂';
+  
+  // Update total score
+  document.getElementById('sc-num').textContent = Math.round(sc.tot);
+  document.getElementById('co2v').textContent = Math.round(sc.tot) + ' kg';
+  
+  // Update progress bar
+  const pct = Math.min(100, (sc.tot / TARGET) * 100);
+  document.getElementById('sc-bar').style.width = pct + '%';
+  
+  // Update status
+  const status = document.getElementById('sc-status');
+  if (sc.tot <= TARGET) {
+    status.style.background = '#14532d30';
+    status.style.borderColor = '#14532d';
+    status.style.color = '#4ade80';
+    status.textContent = '✓ Đạt mục tiêu bền vững!';
+  } else {
+    status.style.background = '#7f1d1d30';
+    status.style.borderColor = '#7f1d1d';
+    status.style.color = '#f87171';
+    const over = Math.round((sc.tot / TARGET) * 100);
+    status.textContent = `⚠️ Vượt mục tiêu ${over}%`;
+  }
+  
+  // Update pie chart
+  if (pieInst) {
+    pieInst.data.datasets[0].data = [Math.round(sc.e), Math.round(sc.t), Math.round(sc.d), Math.round(sc.c)];
+    pieInst.update();
+  }
+  
+  // Update annual
+  const annual = Math.round(sc.tot * 12);
+  const trees = Math.round(annual / 21);
+  document.getElementById('ann').innerHTML = `
+    📅 Tổng năm: <b style="color:#fbbf24">${annual.toLocaleString()} kg CO₂</b><br/>
+    🌳 Cần <b style="color:#22c55e">${trees} cây</b> để trung hòa<br/>
+    🌍 Tương đương <b style="color:#fb923c">${(annual/1000).toFixed(1)} tấn</b>
+  `;
+}
+
+// ════════════════════════════════════════════════════════════════
+//  MINDSET (TƯ DUY) PAGE
+// ════════════════════════════════════════════════════════════════
+const QUIZ = [
+  {
+    q: 'Điều gì quan trọng nhất khi giảm thiểu carbon footprint?',
+    a: [
+      'Giảm tiêu thụ điện năng',
+      'Sử dụng phương tiện công cộng',
+      'Thay đổi chế độ ăn uống',
+      'Tất cả đều quan trọng'
+    ],
+    correct: 3
+  },
+  {
+    q: 'Chế độ ăn nào có lượng phát thải carbon thấp nhất?',
+    a: [
+      'Ăn nhiều thịt đỏ',
+      'Ăn chay (Vegan)',
+      'Ăn hỗn hợp',
+      'Ăn nhiều hải sản'
+    ],
+    correct: 1
+  },
+  {
+    q: 'Việc nào dưới đây giúp giảm carbon footprint nhiều nhất?',
+    a: [
+      'Tắt đèn khi không dùng',
+      'Đi xe đạp thay vì xe máy',
+      'Mua sắm ít hơn',
+      'Tái chế rác thải'
+    ],
+    correct: 2
+  },
+  {
+    q: 'Carbon footprint là gì?',
+    a: [
+      'Lượng carbon trong không khí',
+      'Tổng lượng khí nhà kính phát thải',
+      'Lượng rác thải sinh ra',
+      'Diện tích rừng bị chặt'
+    ],
+    correct: 1
+  },
+  {
+    q: 'Hành động nào sau đây TỐT nhất cho môi trường?',
+    a: [
+      'Dùng túi nhựa nhiều lần',
+      'Mua đồ mới liên tục',
+      'Giảm thiểu tiêu dùng',
+      'Bật điều hòa 24/7'
+    ],
+    correct: 2
+  }
+];
+
+function renderMindHome() {
+  const w = document.getElementById('mind-wrap');
+  if (!w) return;
+  
+  if (S.msStep === -1) {
+    // Quiz home screen
+    w.innerHTML = `
+      <div style="text-align:center; padding:40px 20px;">
+        <h1 style="font-size:2.5em; margin-bottom:20px;">🧠 Kiểm tra nhận thức</h1>
+        <p style="font-size:1.2em; margin-bottom:30px; color:#666;">
+          Trả lời 5 câu hỏi để đánh giá hiểu biết của bạn về carbon footprint
+        </p>
+        <button onclick="startQuiz()" style="
+          padding:15px 40px; 
+          font-size:1.2em; 
+          background:#1a4d2e; 
+          color:white; 
+          border:none; 
+          border-radius:25px; 
+          cursor:pointer;
+          font-family:'Syne',sans-serif;
+          font-weight:600;
+        ">Bắt đầu</button>
+      </div>
+    `;
+  } else if (S.msStep < QUIZ.length) {
+    // Quiz question
+    const q = QUIZ[S.msStep];
+    w.innerHTML = `
+      <div style="padding:20px; max-width:700px; margin:0 auto;">
+        <div style="margin-bottom:20px; color:#666; font-size:0.9em;">
+          Câu ${S.msStep + 1}/${QUIZ.length}
+        </div>
+        <h2 style="margin-bottom:30px; font-size:1.5em;">${q.q}</h2>
+        ${q.a.map((ans, i) => `
+          <div onclick="selectAnswer(${i})" style="
+            padding:15px 20px; 
+            margin-bottom:15px; 
+            background:#f5f5f5; 
+            border-radius:10px; 
+            cursor:pointer;
+            transition:all 0.3s;
+          " onmouseover="this.style.background='#e0e0e0'" 
+             onmouseout="this.style.background='#f5f5f5'">
+            ${String.fromCharCode(65 + i)}. ${ans}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } else {
+    // Quiz result
+    const score = S.msAns.filter((a, i) => a === QUIZ[i].correct).length;
+    const percent = Math.round((score / QUIZ.length) * 100);
+    w.innerHTML = `
+      <div style="text-align:center; padding:40px 20px;">
+        <h1 style="font-size:2.5em; margin-bottom:20px;">🎉 Kết quả</h1>
+        <div style="font-size:3em; color:#1a4d2e; margin:20px 0; font-weight:700;">
+          ${score}/${QUIZ.length}
+        </div>
+        <p style="font-size:1.3em; margin-bottom:10px;">
+          ${percent >= 80 ? 'Xuất sắc!' : percent >= 60 ? 'Khá tốt!' : 'Cần cố gắng thêm!'}
+        </p>
+        <p style="color:#666; margin-bottom:30px;">
+          Bạn đã trả lời đúng ${score} câu hỏi (${percent}%)
+        </p>
+        <button onclick="restartQuiz()" style="
+          padding:15px 40px; 
+          font-size:1.1em; 
+          background:#1a4d2e; 
+          color:white; 
+          border:none; 
+          border-radius:25px; 
+          cursor:pointer;
+          font-family:'Syne',sans-serif;
+          font-weight:600;
+        ">Làm lại</button>
+      </div>
+    `;
+  }
+}
+
+function startQuiz() {
+  S.msStep = 0;
+  S.msAns = [];
+  renderMindHome();
+}
+
+function selectAnswer(idx) {
+  S.msAns.push(idx);
+  S.msStep++;
+  renderMindHome();
+}
+
+function restartQuiz() {
+  S.msStep = -1;
+  S.msAns = [];
+  renderMindHome();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', function() {
+  // Attach slider listeners
+  document.getElementById('sl-e').addEventListener('input', e => { S.elec = +e.target.value; updateCalc(); });
+  document.getElementById('sl-moto').addEventListener('input', e => { S.moto = +e.target.value; updateCalc(); });
+  document.getElementById('sl-car').addEventListener('input', e => { S.car = +e.target.value; updateCalc(); });
+  document.getElementById('sl-bus').addEventListener('input', e => { S.bus = +e.target.value; updateCalc(); });
+  document.getElementById('sl-clo').addEventListener('input', e => { S.clo = +e.target.value; updateCalc(); });
+  document.getElementById('sl-pla').addEventListener('input', e => { S.pla = +e.target.value; updateCalc(); });
+  
+  // Init pie chart
+  pieInst = new Chart(document.getElementById('pieC').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Điện', 'Giao thông', 'Thực phẩm', 'Tiêu dùng'],
+      datasets: [{
+        data: [110, 45, 60, 196],
+        backgroundColor: ['#fbbf24', '#22c55e', '#fb923c', '#14d9a4'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '55%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: c => `${Math.round(c.parsed)} kg CO₂` },
+          backgroundColor: '#091509',
+          borderColor: '#1a3a1a',
+          borderWidth: 1,
+          bodyColor: '#dcfce7'
+        }
+      }
+    }
+  });
+  
+  updateCalc();
+  console.log('App initialized successfully!');
+});
+</script>
+</body>
+</html>
