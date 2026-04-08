@@ -64,6 +64,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .step:last-child{border-right:none}
 .step.done{background:#0d2010}
 
+/* DEVICE MANAGEMENT */
+.devrow{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#0d1f0d;border-radius:8px;border:1px solid #1a3a1a;margin-bottom:9px}
+.devbtn{background:#0d2010;border:1px solid #1a3a1a;border-radius:6px;width:24px;height:24px;cursor:pointer;color:#86efac;font-size:15px;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;flex-shrink:0;transition:all .15s}
+.devbtn:hover{border-color:#22c55e;color:#4ade80}
+.dkg{font-size:11px;color:#86efac;width:46px;text-align:right;flex-shrink:0}
+.airow{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#0d1f0d;border-radius:8px;margin-bottom:9px}
+
 /* HERO */
 #hero.pg{display:none;position:relative;overflow:hidden;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:60px 20px}
 #hero.pg.on{display:flex}
@@ -324,15 +331,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       </div>
     </div>
     
-    <!-- Upload Section -->
+    <!-- Two Column Layout -->
     <div class="g2" style="margin-bottom:18px">
+      <!-- LEFT: Upload -->
       <div class="card">
         <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:14px">📄 Bước 1: Tải Hóa Đơn Điện</div>
-        
-        <!-- Hidden file input -->
         <input type="file" id="bill-file-input" accept="image/*,.pdf" style="display:none" onchange="handleBillFile(this)"/>
-        
-        <!-- Upload Zone -->
         <div id="upzone"
           onclick="document.getElementById('bill-file-input').click()"
           ondragover="event.preventDefault();this.style.borderColor='#22c55e';this.style.background='#0d1f0d'"
@@ -346,17 +350,150 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
           <div style="font-size:12px;color:#86efac;margin-bottom:6px">Nhấn để chọn ảnh · hoặc kéo thả vào đây</div>
           <div style="font-size:11px;color:#4b7a4b">Hỗ trợ JPG, PNG, PDF · AI trích xuất kWh qua OCR</div>
         </div>
-        
-        <!-- Loading Spinner -->
         <div id="bill-loading" style="display:none;text-align:center;padding:24px 0">
           <div style="width:32px;height:32px;border:3px solid #1a3a1a;border-top-color:#22c55e;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px"></div>
           <div style="font-size:13px;color:#86efac">Đang phân tích hóa đơn...</div>
           <div style="font-size:11px;color:#4b7a4b;margin-top:4px">AI OCR đang trích xuất số kWh</div>
         </div>
+        <div id="bill-res" style="display:none"></div>
       </div>
       
-      <!-- Result Display Card -->
-      <div class="card" id="bill-res" style="display:none"></div>
+      <!-- RIGHT: Devices -->
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:14px">📱 Bước 2: Thiết Bị Điện</div>
+        
+        <div class="devrow">
+          <span style="font-size:20px">❄️</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">Điều hòa</div>
+            <div style="font-size:10px;color:#86efac">Đặt 26°C tiết kiệm 0.5–1 kg CO₂/đêm</div>
+          </div>
+          <button class="devbtn" onclick="chDev('ac',-1)">−</button>
+          <span id="dev-ac" style="font-size:13px;font-weight:700;width:20px;text-align:center">1</span>
+          <button class="devbtn" onclick="chDev('ac',1)">+</button>
+          <span class="dkg" id="dev-ac-kg">45 kg</span>
+        </div>
+        
+        <div class="devrow">
+          <span style="font-size:20px">🧊</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">Tủ lạnh</div>
+            <div style="font-size:10px;color:#86efac">Xả đông định kỳ</div>
+          </div>
+          <button class="devbtn" onclick="chDev('fr',-1)">−</button>
+          <span id="dev-fr" style="font-size:13px;font-weight:700;width:20px;text-align:center">1</span>
+          <button class="devbtn" onclick="chDev('fr',1)">+</button>
+          <span class="dkg" id="dev-fr-kg">15 kg</span>
+        </div>
+        
+        <div class="devrow">
+          <span style="font-size:20px">💡</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">Đèn LED</div>
+            <div style="font-size:10px;color:#86efac">Tiết kiệm 80% so với huỳnh quang</div>
+          </div>
+          <button class="devbtn" onclick="chDev('led',-1)">−</button>
+          <span id="dev-led" style="font-size:13px;font-weight:700;width:20px;text-align:center">5</span>
+          <button class="devbtn" onclick="chDev('led',1)">+</button>
+          <span class="dkg" id="dev-led-kg">10 kg</span>
+        </div>
+        
+        <div class="devrow">
+          <span style="font-size:20px">🫧</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">Máy giặt</div>
+            <div style="font-size:10px;color:#86efac">Giặt nước lạnh, đầy tải</div>
+          </div>
+          <button class="devbtn" onclick="chDev('wa',-1)">−</button>
+          <span id="dev-wa" style="font-size:13px;font-weight:700;width:20px;text-align:center">1</span>
+          <button class="devbtn" onclick="chDev('wa',1)">+</button>
+          <span class="dkg" id="dev-wa-kg">8 kg</span>
+        </div>
+        
+        <div class="devrow">
+          <span style="font-size:20px">📺</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">Tivi</div>
+            <div style="font-size:10px;color:#86efac">Bật chế độ tắt tự động</div>
+          </div>
+          <button class="devbtn" onclick="chDev('tv',-1)">−</button>
+          <span id="dev-tv" style="font-size:13px;font-weight:700;width:20px;text-align:center">1</span>
+          <button class="devbtn" onclick="chDev('tv',1)">+</button>
+          <span class="dkg" id="dev-tv-kg">5 kg</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Balance & AI Suggestions -->
+    <div class="g2">
+      <!-- Wallet Balance -->
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:14px">💰 Số Dư Ví Carbon</div>
+        <div id="wal-balance" style="text-align:center;margin-bottom:16px">
+          <div style="font-family:'Syne',sans-serif;font-size:48px;font-weight:800;line-height:1;color:#f87171" id="wal-diff">+37</div>
+          <div style="font-size:12px;color:#86efac;margin-top:6px">kg CO₂ so với chuẩn 73 kg/người</div>
+        </div>
+        <div style="background:#0d1f0d;border-radius:10px;padding:12px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+            <span style="color:#86efac">Chuẩn cơ sở</span>
+            <span style="font-weight:600">73 kg</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+            <span style="color:#86efac">Điện của bạn</span>
+            <span style="font-weight:600" id="wal-your">110 kg</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:#86efac">Chênh lệch</span>
+            <span style="font-weight:700;color:#f87171" id="wal-delta">+37 kg</span>
+          </div>
+        </div>
+        <div id="wal-status" style="padding:10px;border-radius:8px;font-size:12px;background:#7f1d1d30;border:1px solid #7f1d1d;color:#f87171">⚠️ Vượt ngưỡng bền vững 37 kg. Xem gợi ý AI bên dưới.</div>
+      </div>
+      
+      <!-- AI Suggestions -->
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:14px">🤖 Gợi Ý Giảm Phát Thải AI</div>
+        
+        <div class="airow">
+          <span style="font-size:18px">❄️</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">Nâng nhiệt độ điều hòa lên 26°C</div>
+            <div style="font-size:11px;color:#4ade80">Tiết kiệm: 0,5–1 kg CO₂/đêm</div>
+          </div>
+        </div>
+        
+        <div class="airow">
+          <span style="font-size:18px">🔌</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">Rút phích cắm thiết bị chờ</div>
+            <div style="font-size:11px;color:#4ade80">Tiết kiệm: 0,1 kg CO₂/ngày</div>
+          </div>
+        </div>
+        
+        <div class="airow">
+          <span style="font-size:18px">💡</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">Thay toàn bộ bóng sang LED</div>
+            <div style="font-size:11px;color:#4ade80">Tiết kiệm: 0,2 kg CO₂/đêm</div>
+          </div>
+        </div>
+        
+        <div class="airow">
+          <span style="font-size:18px">🔧</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">Vệ sinh lọc điều hòa hàng tháng</div>
+            <div style="font-size:11px;color:#4ade80">Tiết kiệm: 1,5 kg CO₂/tháng</div>
+          </div>
+        </div>
+        
+        <div class="airow">
+          <span style="font-size:18px">☀️</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">Lắp máy nước nóng năng lượng mặt trời</div>
+            <div style="font-size:11px;color:#4ade80">Tiết kiệm: 300–500 kg CO₂/năm</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -394,6 +531,7 @@ const S = {
   clo: 2,
   pla: 3,
   billUp: false,
+  devs: {ac: 1, fr: 1, led: 5, wa: 1, tv: 1},
   msStep: -1,
   msAns: []
 };
@@ -411,6 +549,7 @@ const EF = {
 };
 
 const BASE = 73; // Base electricity CO2 in kg
+const DEV_POW = {ac: 45, fr: 15, led: 2, wa: 8, tv: 5}; // Device power in kg CO2/month
 
 function score() {
   const e = S.elec * EF.elec;
@@ -779,6 +918,50 @@ function resetBill() {
   document.getElementById('bill-res').innerHTML = '';
 }
 
+function chDev(key, delta) {
+  S.devs[key] = Math.max(0, S.devs[key] + delta);
+  updateWallet();
+}
+
+function updateWallet() {
+  // Update device counts and kg
+  Object.keys(S.devs).forEach(k => {
+    const count = S.devs[k];
+    const kg = count * DEV_POW[k];
+    document.getElementById('dev-' + k).textContent = count;
+    document.getElementById('dev-' + k + '-kg').textContent = kg + ' kg';
+  });
+  
+  // Calculate total from devices
+  const totalDevices = Object.keys(S.devs).reduce((sum, k) => sum + S.devs[k] * DEV_POW[k], 0);
+  const diff = totalDevices - BASE;
+  
+  // Update balance display
+  const diffEl = document.getElementById('wal-diff');
+  diffEl.textContent = (diff > 0 ? '+' : '') + diff;
+  diffEl.style.color = diff > 0 ? '#f87171' : '#4ade80';
+  
+  document.getElementById('wal-your').textContent = totalDevices + ' kg';
+  
+  const deltaEl = document.getElementById('wal-delta');
+  deltaEl.textContent = (diff > 0 ? '+' : '') + diff + ' kg';
+  deltaEl.style.color = diff > 0 ? '#f87171' : '#4ade80';
+  
+  // Update status
+  const status = document.getElementById('wal-status');
+  if (diff > 0) {
+    status.style.background = '#7f1d1d30';
+    status.style.borderColor = '#7f1d1d';
+    status.style.color = '#f87171';
+    status.textContent = `⚠️ Vượt ngưỡng bền vững ${diff} kg. Xem gợi ý AI bên dưới.`;
+  } else {
+    status.style.background = '#14532d30';
+    status.style.borderColor = '#14532d';
+    status.style.color = '#4ade80';
+    status.textContent = `✓ Đạt mục tiêu! Tiết kiệm được ${Math.abs(diff)} kg CO₂.`;
+  }
+}
+
 // ════════════════════════════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════════════════════════════
@@ -820,6 +1003,7 @@ window.addEventListener('DOMContentLoaded', function() {
   });
   
   updateCalc();
+  updateWallet();
   console.log('App initialized successfully!');
 });
 </script>
