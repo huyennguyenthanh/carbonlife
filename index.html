@@ -501,14 +501,75 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <!-- ══════════ SIMULATION ══════════ -->
 <div id="sim" class="pg">
   <div class="wrap">
-    <div style="margin-bottom:30px">
+    <div style="margin-bottom:22px">
       <h2 style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin-bottom:8px">🌆 Mô Phỏng Tác Động</h2>
-      <p style="color:#86efac;font-size:14px">Dự báo tác động môi trường Đồng Hới 10 năm tới</p>
+      <p style="color:#86efac;font-size:14px">Dự báo tác động môi trường Đồng Hới 10 năm tới dựa trên điểm carbon của bạn</p>
     </div>
-    <div class="card" style="text-align:center;padding:60px 20px">
-      <div style="font-size:64px;margin-bottom:16px">🎨</div>
-      <div style="font-size:18px;font-weight:600;margin-bottom:8px">Tính Năng Đang Phát Triển</div>
-      <div style="font-size:14px;color:#86efac">Mô phỏng 3D Đồng Hới và dự báo nhiệt độ/AQI sẽ sớm ra mắt!</div>
+    
+    <!-- Scenario Toggle -->
+    <div class="card" style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:22px">🎭</span>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Kịch Bản Mô Phỏng</div>
+            <div style="font-size:11px;color:#86efac">Chọn để so sánh tác động</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="bsm" id="sc-curr" onclick="setScen('current')" style="background:#0d1f0d;border-color:#22c55e">⚠️ Như Hiện Tại</button>
+          <button class="bsm" id="sc-green" onclick="setScen('green')">🌱 Chuyển Đổi Xanh</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Main Grid -->
+    <div class="sim-grid">
+      <!-- Left: Canvas + KPIs -->
+      <div>
+        <div class="cwrap">
+          <canvas id="cityC" width="820" height="340"></canvas>
+          <div id="sc-badge" class="cbadge" style="top:12px;right:12px;background:#7f1d1dcc;border:1px solid #ef4444;color:#f87171">⚠️ Như Hiện Tại</div>
+          <div id="fire-badge" class="cbadge firewarn" style="bottom:12px;right:12px;display:none;background:#7f1d1dcc;border:1px solid #ef4444;color:#f87171"></div>
+        </div>
+        <div class="g3" style="margin-top:14px">
+          <div class="card" id="kpi-t" style="text-align:center">
+            <div style="font-size:11px;color:#86efac;margin-bottom:3px">🌡️ Nhiệt Độ TB</div>
+            <div id="v-t" style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#4ade80">27.0°C</div>
+            <div style="font-size:10px;color:#4b7a4b">Cơ sở: 27°C</div>
+          </div>
+          <div class="card" id="kpi-a" style="text-align:center">
+            <div style="font-size:11px;color:#86efac;margin-bottom:3px">💨 Chỉ Số AQI</div>
+            <div id="v-a" style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#4ade80">48</div>
+            <div style="font-size:10px;color:#4b7a4b">Lành mạnh: &lt;50</div>
+          </div>
+          <div class="card" id="kpi-g" style="text-align:center">
+            <div style="font-size:11px;color:#86efac;margin-bottom:3px">🌳 Độ Phủ Xanh</div>
+            <div id="v-g" style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#4ade80">34%</div>
+            <div style="font-size:10px;color:#4b7a4b">Mục tiêu: ≥30%</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right: Charts + Timeline -->
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="card">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;margin-bottom:8px">🌡️ Nhiệt Độ</div>
+          <div style="position:relative;height:105px"><canvas id="tC"></canvas></div>
+        </div>
+        <div class="card">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;margin-bottom:8px">🌳 Độ Phủ Xanh</div>
+          <div style="position:relative;height:105px"><canvas id="gC"></canvas></div>
+        </div>
+        <div class="card">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;margin-bottom:8px">💨 AQI</div>
+          <div style="position:relative;height:105px"><canvas id="aC"></canvas></div>
+        </div>
+        <div class="card" id="out-card">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;margin-bottom:6px">📋 Dự Báo 10 Năm</div>
+          <div id="out-txt" style="font-size:12px;color:#86efac;line-height:1.65"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -532,6 +593,8 @@ const S = {
   pla: 3,
   billUp: false,
   devs: {ac: 1, fr: 1, led: 5, wa: 1, tv: 1},
+  simYear: 0,
+  scen: 'current',
   msStep: -1,
   msAns: []
 };
@@ -564,7 +627,6 @@ function score() {
 // ════════════════════════════════════════════════════════════════
 const PAGES = ['hero', 'calc', 'wal', 'sim', 'mind'];
 function go(id) {
-  console.log('Navigating to:', id);
   PAGES.forEach(p => {
     const pg = document.getElementById(p);
     const nb = document.getElementById('nb-' + p);
@@ -572,10 +634,28 @@ function go(id) {
     if (nb) nb.classList.toggle('on', p === id);
   });
   document.getElementById('co2b').style.display = id === 'hero' ? 'none' : 'flex';
+  
+  // Stop simulation animation when leaving sim page
+  if (id !== 'sim' && simRaf) {
+    cancelAnimationFrame(simRaf);
+    simRaf = null;
+    pts = [];
+  }
+  
   if (id === 'calc') updateCalc();
+  if (id === 'sim') initSim();
   if (id === 'mind') renderMindHome();
   window.scrollTo(0, 0);
 }
+
+// ════════════════════════════════════════════════════════════════
+//  SIMULATION VARIABLES
+// ════════════════════════════════════════════════════════════════
+let simRaf = null;
+let pts = [];
+let tCI = null, gCI = null, aCI = null;
+let birds = [];
+let simTime = 0;
 
 // ════════════════════════════════════════════════════════════════
 //  PARTICLES
@@ -590,6 +670,453 @@ function go(id) {
     el.appendChild(d);
   }
 })();
+
+// ════════════════════════════════════════════════════════════════
+//  SIMULATION — Canvas Cityscape & Helpers
+// ════════════════════════════════════════════════════════════════
+function mkPt(x, y, type) {
+  const sm = type === 'smoke';
+  return {
+    x, y,
+    vx: (Math.random() - 0.5) * (sm ? 0.7 : 1.5),
+    vy: -(Math.random() * (sm ? 1.6 : 3) + (sm ? 0.5 : 1)),
+    life: 1,
+    decay: sm ? Math.random() * 0.007 + 0.004 : Math.random() * 0.022 + 0.016,
+    size: sm ? Math.random() * 20 + 10 : Math.random() * 11 + 4,
+    type
+  };
+}
+
+function getPol() {
+  const sc = score();
+  const base = Math.min(1, sc.tot / 280);
+  return (S.scen === 'current' ? base : base * 0.22) * (S.simYear / 10);
+}
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function lerpC(r1, g1, b1, r2, g2, b2, t) {
+  return `rgb(${Math.round(lerp(r1, r2, t))},${Math.round(lerp(g1, g2, t))},${Math.round(lerp(b1, b2, t))})`;
+}
+
+function drawWaves(ctx, yBase, W, t, amp, freq, col, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let x = 0; x <= W; x += 2) {
+    const y = yBase + Math.sin((x / W) * freq * Math.PI * 2 + t * 0.0015) * amp;
+    x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawBird(ctx, x, y, s, col) {
+  ctx.save();
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 1.2;
+  ctx.globalAlpha = 0.7;
+  ctx.beginPath();
+  ctx.moveTo(x - s, y);
+  ctx.quadraticCurveTo(x - s * 0.5, y - s * 0.6, x, y);
+  ctx.quadraticCurveTo(x + s * 0.5, y - s * 0.6, x + s, y);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawMountains(ctx, peaks, groundY, W, fillCol, strokeCol) {
+  ctx.beginPath();
+  ctx.moveTo(0, groundY);
+  peaks.forEach(([px, py]) => ctx.lineTo(px * W, py));
+  ctx.lineTo(W, groundY);
+  ctx.closePath();
+  ctx.fillStyle = fillCol;
+  ctx.fill();
+  if (strokeCol) {
+    ctx.strokeStyle = strokeCol;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+}
+
+function drawQBGate(ctx, cx, baseY, pol) {
+  const wallCol = lerpC(180, 160, 130, 120, 80, 60, pol);
+  const shadowCol = lerpC(140, 120, 100, 80, 45, 30, pol);
+  const roofCol = lerpC(160, 60, 50, 100, 30, 20, pol);
+  const W = 72, H = 90, arch = 30, tier2H = 30, tier2W = 50;
+
+  // Base gate walls
+  ctx.fillStyle = wallCol;
+  ctx.fillRect(cx - W / 2, baseY - H, W, H);
+
+  // Arch opening
+  ctx.fillStyle = '#050d05';
+  ctx.beginPath();
+  ctx.arc(cx, baseY - arch, arch * 0.8, 0, Math.PI, true);
+  ctx.fill();
+
+  // Shadow detail
+  ctx.fillStyle = shadowCol;
+  ctx.fillRect(cx - W / 2, baseY - H, 8, H);
+  ctx.fillRect(cx + W / 2 - 8, baseY - H, 8, H);
+
+  // Second tier (roof)
+  ctx.fillStyle = roofCol;
+  ctx.beginPath();
+  ctx.moveTo(cx - tier2W / 2, baseY - H);
+  ctx.lineTo(cx, baseY - H - tier2H);
+  ctx.lineTo(cx + tier2W / 2, baseY - H);
+  ctx.closePath();
+  ctx.fill();
+
+  // Roof overhang
+  ctx.fillStyle = lerpC(140, 50, 40, 90, 25, 15, pol);
+  ctx.fillRect(cx - tier2W / 2 - 4, baseY - H, tier2W + 8, 6);
+}
+
+function initSim() {
+  if (!simRaf) {
+    S.simYear = 0;
+    pts = [];
+    birds = [];
+    for (let i = 0; i < 5; i++) {
+      birds.push({ x: Math.random() * 820, y: 60 + Math.random() * 80, vx: 0.3 + Math.random() * 0.4 });
+    }
+    simTime = 0;
+    renderSim();
+  }
+}
+
+function setScen(sc) {
+  S.scen = sc;
+  document.getElementById('sc-curr').style.background = sc === 'current' ? '#0d1f0d' : 'transparent';
+  document.getElementById('sc-curr').style.borderColor = sc === 'current' ? '#22c55e' : '#1a3a1a';
+  document.getElementById('sc-green').style.background = sc === 'green' ? '#0d1f0d' : 'transparent';
+  document.getElementById('sc-green').style.borderColor = sc === 'green' ? '#22c55e' : '#1a3a1a';
+  document.getElementById('sc-badge').textContent = sc === 'current' ? '⚠️ Như Hiện Tại' : '🌱 Chuyển Đổi Xanh';
+  document.getElementById('sc-badge').style.background = sc === 'current' ? '#7f1d1dcc' : '#14532dcc';
+  document.getElementById('sc-badge').style.borderColor = sc === 'current' ? '#ef4444' : '#22c55e';
+  document.getElementById('sc-badge').style.color = sc === 'current' ? '#f87171' : '#4ade80';
+  renderSim();
+}
+
+function renderSim() {
+  const c = document.getElementById('cityC');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = 820, H = 340;
+
+  // Advance year slowly
+  S.simYear = Math.min(10, S.simYear + 0.008);
+  simTime++;
+
+  const pol = getPol();
+  const sc = score();
+
+  // ── Sky gradient (green → orange/red)
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+  skyGrad.addColorStop(0, lerpC(5, 13, 5, 40, 20, 10, pol));
+  skyGrad.addColorStop(1, lerpC(10, 25, 10, 60, 30, 15, pol));
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Background mountains
+  const mtn1 = [[0.1, 180], [0.25, 140], [0.45, 165], [0.65, 135], [0.85, 155], [1, 170]];
+  drawMountains(ctx, mtn1, H, W, lerpC(30, 60, 40, 50, 40, 30, pol), null);
+
+  // ── Sea (Nhật Lệ river)
+  const seaY = 240;
+  const seaGrad = ctx.createLinearGradient(0, seaY, 0, H);
+  seaGrad.addColorStop(0, lerpC(20, 60, 80, 40, 50, 45, pol));
+  seaGrad.addColorStop(1, lerpC(15, 45, 60, 30, 35, 30, pol));
+  ctx.fillStyle = seaGrad;
+  ctx.fillRect(0, seaY, W, H - seaY);
+
+  // Animated waves
+  drawWaves(ctx, seaY + 10, W, simTime, 3, 4, lerpC(40, 100, 120, 60, 70, 60, pol), 0.4);
+  drawWaves(ctx, seaY + 18, W, simTime + 50, 2, 5, lerpC(30, 80, 100, 50, 60, 50, pol), 0.3);
+
+  // ── Beach
+  ctx.fillStyle = lerpC(210, 190, 150, 140, 110, 80, pol);
+  ctx.beginPath();
+  ctx.moveTo(0, seaY);
+  ctx.lineTo(W * 0.3, seaY);
+  ctx.lineTo(W * 0.5, seaY + 30);
+  ctx.lineTo(0, seaY + 30);
+  ctx.closePath();
+  ctx.fill();
+
+  // ── Foreground mountains
+  const mtn2 = [[0, 220], [0.15, 200], [0.28, 215], [0.42, 195], [0.58, 210], [0.75, 190], [0.9, 205], [1, 220]];
+  drawMountains(ctx, mtn2, H, W, lerpC(40, 80, 50, 60, 50, 35, pol), null);
+
+  // ── City skyline (simple buildings)
+  const bldgs = [
+    { x: 120, w: 50, h: 80 }, { x: 190, w: 45, h: 100 }, { x: 260, w: 60, h: 70 },
+    { x: 340, w: 55, h: 95 }, { x: 420, w: 48, h: 85 }, { x: 500, w: 52, h: 75 },
+    { x: 580, w: 58, h: 90 }, { x: 660, w: 50, h: 80 }
+  ];
+  bldgs.forEach(b => {
+    ctx.fillStyle = lerpC(80, 90, 85, 60, 55, 50, pol);
+    ctx.fillRect(b.x, H - b.h, b.w, b.h);
+    ctx.strokeStyle = lerpC(50, 60, 55, 40, 35, 30, pol);
+    ctx.strokeRect(b.x, H - b.h, b.w, b.h);
+
+    // Windows (dim if polluted)
+    const winAlpha = lerp(0.6, 0.2, pol);
+    ctx.fillStyle = `rgba(251, 191, 36, ${winAlpha})`;
+    for (let wy = H - b.h + 10; wy < H - 10; wy += 15) {
+      for (let wx = b.x + 8; wx < b.x + b.w - 8; wx += 12) {
+        ctx.fillRect(wx, wy, 6, 8);
+      }
+    }
+  });
+
+  // ── Quảng Bình Gate (landmark)
+  drawQBGate(ctx, 410, H, pol);
+
+  // ── Trees (fewer if polluted)
+  const treeCount = Math.round(lerp(12, 3, pol));
+  ctx.fillStyle = lerpC(34, 139, 34, 60, 80, 40, pol);
+  for (let i = 0; i < treeCount; i++) {
+    const tx = 50 + i * 60 + (i % 3) * 10;
+    const ty = H - 15;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx - 8, ty - 20);
+    ctx.lineTo(tx + 8, ty - 20);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = lerpC(101, 67, 33, 80, 50, 30, pol);
+    ctx.fillRect(tx - 2, ty - 5, 4, 5);
+    ctx.fillStyle = lerpC(34, 139, 34, 60, 80, 40, pol);
+  }
+
+  // ── Birds
+  birds.forEach(bird => {
+    drawBird(ctx, bird.x, bird.y, 5, lerpC(200, 200, 200, 120, 100, 80, pol));
+    bird.x += bird.vx;
+    if (bird.x > W + 20) {
+      bird.x = -20;
+      bird.y = 60 + Math.random() * 80;
+    }
+  });
+
+  // ── Fire/smoke particles (more if polluted)
+  if (pol > 0.3 && Math.random() < pol * 0.15) {
+    const fx = 200 + Math.random() * 400;
+    pts.push(mkPt(fx, H - 80 - Math.random() * 40, Math.random() > 0.6 ? 'smoke' : 'fire'));
+  }
+  pts.forEach((p, i) => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life -= p.decay;
+    if (p.life <= 0) {
+      pts.splice(i, 1);
+      return;
+    }
+    ctx.save();
+    ctx.globalAlpha = p.life * 0.6;
+    ctx.fillStyle = p.type === 'fire' ? '#fb923c' : '#6b7280';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // Fire warning badge
+  const fb = document.getElementById('fire-badge');
+  if (pol > 0.5) {
+    fb.style.display = 'block';
+    fb.textContent = `🔥 Nguy cơ cháy rừng +${Math.round(pol * 45)}%`;
+  } else {
+    fb.style.display = 'none';
+  }
+
+  // ── Update KPIs
+  const baseTemp = 27.0;
+  const baseAQI = 48;
+  const baseGreen = 34;
+
+  const temp = S.scen === 'current'
+    ? baseTemp + (sc.tot / 100) * (S.simYear / 10) * 1.8
+    : baseTemp + (sc.tot / 100) * (S.simYear / 10) * 0.3;
+  const aqi = S.scen === 'current'
+    ? baseAQI + (sc.tot / 10) * (S.simYear / 10) * 2.5
+    : Math.max(20, baseAQI - (S.simYear / 10) * 15);
+  const green = S.scen === 'current'
+    ? Math.max(10, baseGreen - (sc.tot / 100) * (S.simYear / 10) * 8)
+    : Math.min(60, baseGreen + (S.simYear / 10) * 12);
+
+  document.getElementById('v-t').textContent = temp.toFixed(1) + '°C';
+  document.getElementById('v-a').textContent = Math.round(aqi);
+  document.getElementById('v-g').textContent = Math.round(green) + '%';
+
+  // Color coding
+  const tCard = document.getElementById('kpi-t');
+  const aCard = document.getElementById('kpi-a');
+  const gCard = document.getElementById('kpi-g');
+  
+  if (temp > 29) {
+    document.getElementById('v-t').style.color = '#f87171';
+    tCard.style.borderColor = '#7f1d1d';
+  } else if (temp > 28) {
+    document.getElementById('v-t').style.color = '#fb923c';
+    tCard.style.borderColor = '#78350f';
+  } else {
+    document.getElementById('v-t').style.color = '#4ade80';
+    tCard.style.borderColor = '#1a3a1a';
+  }
+
+  if (aqi > 100) {
+    document.getElementById('v-a').style.color = '#f87171';
+    aCard.style.borderColor = '#7f1d1d';
+  } else if (aqi > 50) {
+    document.getElementById('v-a').style.color = '#fb923c';
+    aCard.style.borderColor = '#78350f';
+  } else {
+    document.getElementById('v-a').style.color = '#4ade80';
+    aCard.style.borderColor = '#1a3a1a';
+  }
+
+  if (green < 20) {
+    document.getElementById('v-g').style.color = '#f87171';
+    gCard.style.borderColor = '#7f1d1d';
+  } else if (green < 30) {
+    document.getElementById('v-g').style.color = '#fb923c';
+    gCard.style.borderColor = '#78350f';
+  } else {
+    document.getElementById('v-g').style.color = '#4ade80';
+    gCard.style.borderColor = '#1a3a1a';
+  }
+
+  // Update charts
+  if (!tCI) {
+    const yrs = ['2026', '2028', '2030', '2032', '2034', '2036'];
+    tCI = new Chart(document.getElementById('tC').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: yrs,
+        datasets: [{
+          data: [27, 27.5, 28.2, 29.1, 30.2, 31.5],
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239,68,68,0.1)',
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: '#1a3a1a' }, ticks: { color: '#86efac', font: { size: 9 } } },
+          y: { grid: { color: '#1a3a1a' }, ticks: { color: '#86efac', font: { size: 9 } }, min: 26, max: 32 }
+        }
+      }
+    });
+
+    gCI = new Chart(document.getElementById('gC').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: yrs,
+        datasets: [{
+          data: [34, 32, 29, 25, 20, 16],
+          borderColor: S.scen === 'current' ? '#ef4444' : '#22c55e',
+          backgroundColor: S.scen === 'current' ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)',
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: '#1a3a1a' }, ticks: { color: '#86efac', font: { size: 9 } } },
+          y: { grid: { color: '#1a3a1a' }, ticks: { color: '#86efac', font: { size: 9 } }, min: 0, max: 70 }
+        }
+      }
+    });
+
+    aCI = new Chart(document.getElementById('aC').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: yrs,
+        datasets: [{
+          data: [48, 65, 82, 105, 135, 165],
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239,68,68,0.1)',
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: '#1a3a1a' }, ticks: { color: '#86efac', font: { size: 9 } } },
+          y: { grid: { color: '#1a3a1a' }, ticks: { color: '#86efac', font: { size: 9 } }, min: 0, max: 200 }
+        }
+      }
+    });
+  } else {
+    // Update chart data based on scenario
+    if (S.scen === 'green') {
+      tCI.data.datasets[0].data = [27, 27.2, 27.4, 27.5, 27.6, 27.7];
+      tCI.data.datasets[0].borderColor = '#22c55e';
+      tCI.data.datasets[0].backgroundColor = 'rgba(34,197,94,0.1)';
+      
+      gCI.data.datasets[0].data = [34, 38, 42, 47, 52, 58];
+      gCI.data.datasets[0].borderColor = '#22c55e';
+      gCI.data.datasets[0].backgroundColor = 'rgba(34,197,94,0.1)';
+      
+      aCI.data.datasets[0].data = [48, 42, 35, 28, 22, 18];
+      aCI.data.datasets[0].borderColor = '#22c55e';
+      aCI.data.datasets[0].backgroundColor = 'rgba(34,197,94,0.1)';
+    } else {
+      tCI.data.datasets[0].data = [27, 27.5, 28.2, 29.1, 30.2, 31.5];
+      tCI.data.datasets[0].borderColor = '#ef4444';
+      tCI.data.datasets[0].backgroundColor = 'rgba(239,68,68,0.1)';
+      
+      gCI.data.datasets[0].data = [34, 32, 29, 25, 20, 16];
+      gCI.data.datasets[0].borderColor = '#ef4444';
+      gCI.data.datasets[0].backgroundColor = 'rgba(239,68,68,0.1)';
+      
+      aCI.data.datasets[0].data = [48, 65, 82, 105, 135, 165];
+      aCI.data.datasets[0].borderColor = '#ef4444';
+      aCI.data.datasets[0].backgroundColor = 'rgba(239,68,68,0.1)';
+    }
+    tCI.update('none');
+    gCI.update('none');
+    aCI.update('none');
+  }
+
+  // Outcome text
+  const otxt = document.getElementById('out-txt');
+  const ocard = document.getElementById('out-card');
+  if (S.scen === 'current') {
+    if (sc.tot > 300) {
+      otxt.innerHTML = '🔥 <strong style="color:#f87171">Kịch bản nghiêm trọng:</strong> Nhiệt độ tăng 4.5°C, AQI vượt 150 (nguy hại), độ phủ xanh giảm xuống 16%. Nguy cơ cháy rừng, hạn hán kéo dài, và di cư môi trường gia tăng.';
+      ocard.style.borderColor = '#7f1d1d';
+    } else if (sc.tot > 200) {
+      otxt.innerHTML = '⚠️ <strong style="color:#fb923c">Kịch bản cảnh báo:</strong> Nhiệt độ tăng 2.8°C, AQI lên 105 (không lành mạnh), độ phủ xanh giảm còn 25%. Sức khỏe cộng đồng bị ảnh hưởng, chi phí y tế tăng.';
+      ocard.style.borderColor = '#78350f';
+    } else {
+      otxt.innerHTML = '✅ <strong style="color:#4ade80">Kịch bản ổn định:</strong> Với điểm carbon hiện tại, tác động còn kiểm soát được. Nhiệt độ tăng nhẹ 1.2°C, AQI ở mức trung bình 65, độ phủ xanh duy trì 29%.';
+      ocard.style.borderColor = '#1a3a1a';
+    }
+  } else {
+    otxt.innerHTML = '🌱 <strong style="color:#4ade80">Kịch bản chuyển đổi xanh:</strong> Nhiệt độ ổn định quanh 27.7°C (+0.7°C), AQI giảm xuống 18 (tuyệt vời), độ phủ xanh tăng lên 58%. Chất lượng không khí được cải thiện đáng kể, sức khỏe cộng đồng tốt hơn.';
+    ocard.style.borderColor = '#14532d';
+  }
+
+  // Continue animation
+  simRaf = requestAnimationFrame(renderSim);
+}
 
 // ════════════════════════════════════════════════════════════════
 //  CALCULATOR
